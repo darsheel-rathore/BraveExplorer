@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -31,7 +30,7 @@ public class G_CullManager : MonoBehaviour
         _cullingGroup = new CullingGroup();
 
         _cullingGroup.targetCamera = Camera.main;
-       // Debug.Log(_cullingGroup.targetCamera);
+        // Debug.Log(_cullingGroup.targetCamera);
 
         _boundingSphere = new BoundingSphere[_Cullers.Count];
 

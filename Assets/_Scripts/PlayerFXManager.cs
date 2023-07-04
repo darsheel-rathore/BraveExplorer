@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.VFX;
 
@@ -7,6 +5,7 @@ public class PlayerFXManager : MonoBehaviour
 {
     [SerializeField] public VisualEffect footStepFX;
     [SerializeField] public VisualEffect fallFX;
+    [SerializeField] public ParticleSystem blade01;
 
     public void Update_FootStep(bool state)
     {
@@ -18,9 +17,11 @@ public class PlayerFXManager : MonoBehaviour
 
     public void Update_Fall(bool state)
     {
-        if(state)
+        if (state)
             fallFX.Play();
         else
             fallFX.Stop();
     }
+
+    public void PlayBlade01() => blade01.Play();
 }
