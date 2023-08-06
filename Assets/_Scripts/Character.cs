@@ -1,7 +1,10 @@
+using System.Collections;
 using UnityEngine;
 
 public class Character : MonoBehaviour
 {
+    #region Fields, Enums
+
     public float moveSpeed = 5f;
     public Vector3 movementVelocity;
     public Health health;
@@ -24,17 +27,38 @@ public class Character : MonoBehaviour
     public float attackSlideDuration = 0.4f;
     public float attackSlideSpeed = 0.06f;
 
+    // Damage Caster
+    private DamageCaster damageCaster;
+
+    // Material Animation
+    private MaterialPropertyBlock materialPropertyBlock;
+    private SkinnedMeshRenderer skinnedMeshRenderer;
+
+    // Item To Drop
+    public GameObject itemToDrop;
+
+    // Invincible Player
+    public bool IsInvincible;
+    public float invincibleDuration = 2f;
+
     // Enums
     public enum CharacterState
     {
-        NORMAL, ATTACKING
+        NORMAL, ATTACKING, DEAD, BEINGHIT
     }
+    #endregion
 
-    // Start is called before the first frame update
     void Awake()
     {
         // Initializing Fields
         animator = GetComponent<Animator>();
+        health = GetComponent<Health>();    
+
+        skinnedMeshRenderer = GetComponentInChildren<SkinnedMeshRenderer>();
+        materialPropertyBlock = new MaterialPropertyBlock();
+        skinnedMeshRenderer.GetPropertyBlock(materialPropertyBlock);
+        damageCaster = GetComponentInChildren<DamageCaster>();
+
 
         if (!isPlayer)
         {
@@ -67,8 +91,6 @@ public class Character : MonoBehaviour
             case CharacterState.ATTACKING:
                 if (isPlayer)
                 {
-                    movementVelocity = Vector3.zero;
-
                     if (Time.time < (attackStartTime + attackSlideDuration))
                     {
                         float timePassed = Time.time - attackStartTime;
@@ -83,15 +105,23 @@ public class Character : MonoBehaviour
                     //transform.rotation = newRot;
                 }
                 break;
+
+            case CharacterState.DEAD:
+                return;
+
+            case CharacterState.BEINGHIT:
+                break;
         }
 
         if (isPlayer)
         {
             CheckPlayerFall();                              // Change the animation state to falling
             characterController.Move(movementVelocity);     // Finally moves the player in the desired direction
+            movementVelocity = Vector3.zero;
         }
     }
 
+    #region Movement(Run, Jump, Fall)
     private void CalculatePlayerMovment()
     {
         if (playerInput.mouseBtnDown && characterController.isGrounded)
@@ -107,7 +137,7 @@ public class Character : MonoBehaviour
         movementVelocity.Normalize();
 
         // Check if player is running
-        ChangeAnimState("Speed", movementVelocity.magnitude);
+        ChangeAnimState<object>("Speed", movementVelocity.magnitude);
 
         // Dont know what this is
         movementVelocity = Quaternion.Euler(0f, -45f, 0f) * movementVelocity;
@@ -120,18 +150,27 @@ public class Character : MonoBehaviour
 
     private void CalculateEnemyMovement()
     {
+        // Calculate the distance between the enemy and the target position
         float distance = Vector3.Distance(targetPos.position, transform.position);
 
+        // Check if the enemy is far from the target
         if (distance > navMeshAgent.stoppingDistance)
         {
+            // Move the enemy towards the target position
             navMeshAgent.SetDestination(targetPos.position);
-            ChangeAnimState("Speed", 0.2f);
+
+            // Change the animation state to indicate movement
+            ChangeAnimState<object>("Speed", 0.2f);
         }
         else
         {
+            // Stop the enemy's movement since it is close enough to the target
             navMeshAgent.SetDestination(transform.position);
-            ChangeAnimState("Speed", 0f);
 
+            // Stop the movement animation
+            ChangeAnimState<object>("Speed", 0f);
+
+            // Switch the character state to attacking mode
             SwitchStateTo(CharacterState.ATTACKING);
         }
     }
@@ -153,10 +192,11 @@ public class Character : MonoBehaviour
         movementVelocity = movementVelocity + (verticalSpeed * Vector3.up * Time.deltaTime);
 
         // Changing animation state when required
-        ChangeAnimState("Airborne", !characterController.isGrounded);
+        ChangeAnimState<object>("Airborne", !characterController.isGrounded);
     }
+    #endregion
 
-    private void SwitchStateTo(CharacterState newState)
+    public void SwitchStateTo(CharacterState newState)
     {
         if (isPlayer)
         {
@@ -164,20 +204,31 @@ public class Character : MonoBehaviour
             playerInput.mouseBtnDown = false;
         }
 
-        // Current State
-        //switch(currentState)
-        //{
-        //    case CharacterState.NORMAL:
-        //        break;
-        //    case CharacterState.ATTACKING:
-        //        break;
-        //}
+        // Exiting State
+        switch (currentState)
+        {
+            case CharacterState.NORMAL:
+                break;
 
-        // New State
+            case CharacterState.ATTACKING:
+
+                if (damageCaster != null)
+                    DisableDamageCaster();
+                break;
+            
+            case CharacterState.DEAD:
+                return;
+            
+            case CharacterState.BEINGHIT:
+                break;
+        }
+
+        // Entering State
         switch (newState)
         {
             case CharacterState.NORMAL:
                 break;
+
             case CharacterState.ATTACKING:
 
                 if (!isPlayer)
@@ -186,20 +237,39 @@ public class Character : MonoBehaviour
                     transform.rotation = newRot;
                 }
 
-                animator.SetTrigger("Attack");
+                // Change the animation state to attack
+                ChangeAnimState<object>("Attack", null);
 
                 if (isPlayer)
                 {
                     attackStartTime = Time.time;
                 }
                 break;
+
+            case CharacterState.DEAD:
+                if(isPlayer)
+                    characterController.enabled = false;
+
+                ChangeAnimState<object>("Dead", null);
+                StartCoroutine(MaterialDissolve());
+                break;
+
+            case CharacterState.BEINGHIT:
+                ChangeAnimState<object>("BeingHit", null);
+                if (isPlayer)
+                {
+                    IsInvincible = true;
+                    StartCoroutine(DelayCancelInvincible());
+                }
+                break;
+
         }
 
         currentState = newState;
     }
 
-    // Animation
-    private void ChangeAnimState<T>(string stateName, T value = default) where T : struct
+    #region Animation
+    private void ChangeAnimState<T>(string stateName, T value = default) where T : class
     {
         switch (value)
         {
@@ -213,18 +283,95 @@ public class Character : MonoBehaviour
                 animator.SetInteger(stateName, intValue);
                 break;
             default:
-                animator.SetTrigger(stateName);
+                if (value == null)
+                {
+                    animator.SetTrigger(stateName);
+                }
                 break;
         }
     }
 
     public void AttackAnimationEnds() => SwitchStateTo(CharacterState.NORMAL);
+    #endregion
 
+    #region Health/Damage
     public void ApplyDamage(int damage, Vector3 attackPos = new Vector3())
     {
-        if(health != null)
+        if (IsInvincible)
+            return;
+
+        if (health != null)
         {
             health.ApplyDamage(damage);
+        }
+
+        if(!isPlayer)
+        {
+            GetComponent<EnemyVFXManager>().BeingHit(attackPos);
+        }
+
+        if (isPlayer)
+            SwitchStateTo(CharacterState.BEINGHIT);
+
+        StartCoroutine(MaterialBlink());
+    }
+
+    public void EnableDamageCaster() => damageCaster.EnableDamageCaster();
+
+    public void DisableDamageCaster() => damageCaster.DisableDamageCaster();
+    #endregion
+
+    public void BeingHitAnimationEnds() => SwitchStateTo(CharacterState.NORMAL);
+
+    IEnumerator MaterialBlink()
+    {
+        materialPropertyBlock.SetFloat("_blink", 0.8f);
+        skinnedMeshRenderer.SetPropertyBlock(materialPropertyBlock);
+
+        yield return new WaitForSeconds(0.2f);
+
+        materialPropertyBlock.SetFloat("_blink", 0);
+        skinnedMeshRenderer.SetPropertyBlock(materialPropertyBlock);
+    }
+
+    IEnumerator MaterialDissolve()
+    {
+        yield return new WaitForSeconds(2f);
+
+        float dissolveTimeDuration = 2f;
+        float currentDissolveTime = 0;
+        float dissolveHeight_start = 20f;
+        float dissolveHeight_target = -10f;
+        float dissolveHeight;
+
+        materialPropertyBlock.SetFloat("_enableDissolve", 1f);
+        skinnedMeshRenderer.SetPropertyBlock(materialPropertyBlock);
+
+        while(currentDissolveTime < dissolveTimeDuration)
+        {
+            currentDissolveTime += Time.deltaTime;
+            dissolveHeight = Mathf.Lerp(dissolveHeight_start, dissolveHeight_target, currentDissolveTime / dissolveTimeDuration);
+
+            materialPropertyBlock.SetFloat("_dissolve_height", dissolveHeight);
+            skinnedMeshRenderer.SetPropertyBlock(materialPropertyBlock);
+            yield return null;
+        }
+
+        DropItem();
+    }
+
+    IEnumerator DelayCancelInvincible()
+    {
+        yield return new WaitForSeconds(2f);
+        IsInvincible = false;
+    }
+
+    // Drop Healing ORB
+    public void DropItem()
+    {
+        if (itemToDrop != null)
+        {
+            Instantiate(itemToDrop, transform.position, Quaternion.identity);
         }
     }
 }

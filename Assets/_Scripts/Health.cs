@@ -19,8 +19,22 @@ public class Health : MonoBehaviour
         if(currentHealth >= damage)
         {
             currentHealth -= damage;
-            Debug.Log("Current Health:: " + currentHealth);
-            Debug.Log("Damage :: " + damage);
+            //Debug.Log("Current Health:: " + currentHealth);
+            //Debug.Log("Damage :: " + damage);
+        }
+        else
+        {
+            currentHealth = 0;             
+        }
+
+        CheckHealth();
+    }
+
+    private void CheckHealth()
+    {
+        if(currentHealth <= 0)
+        {
+            character.SwitchStateTo(Character.CharacterState.DEAD);
         }
     }
 }

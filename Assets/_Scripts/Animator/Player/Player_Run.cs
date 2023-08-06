@@ -7,6 +7,7 @@ public class Player_Run : StateMachineBehaviour
     {
         if (animator.GetComponent<PlayerFXManager>() == null)
             return;
+
         animator.GetComponent<PlayerFXManager>().Update_FootStep(true);
     }
 
@@ -16,7 +17,7 @@ public class Player_Run : StateMachineBehaviour
     {
         if (animator.GetComponent<PlayerFXManager>() == null)
             return;
-        animator.GetComponent<PlayerFXManager>().Update_FootStep(false);
 
+        animator.GetComponent<PlayerFXManager>().Update_FootStep(false);
     }
 }
