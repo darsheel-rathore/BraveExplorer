@@ -22,6 +22,12 @@ public class Character : MonoBehaviour
     private Transform targetPos;
     private CharacterState currentState;
 
+    // Coin
+    public int coin;
+
+    // combo VFX
+    public float attackAnimDuration;
+
     // Player Slides
     private float attackStartTime;
     public float attackSlideDuration = 0.4f;
@@ -59,6 +65,7 @@ public class Character : MonoBehaviour
         skinnedMeshRenderer.GetPropertyBlock(materialPropertyBlock);
         damageCaster = GetComponentInChildren<DamageCaster>();
 
+        characterController = GetComponent<CharacterController>();
 
         if (!isPlayer)
         {
@@ -69,7 +76,6 @@ public class Character : MonoBehaviour
         else
         {
             playerInput = GetComponent<PlayerInput>();
-            characterController = GetComponent<CharacterController>();
         }
     }
 
@@ -91,6 +97,7 @@ public class Character : MonoBehaviour
             case CharacterState.ATTACKING:
                 if (isPlayer)
                 {
+                    // Performing DASH Feature
                     if (Time.time < (attackStartTime + attackSlideDuration))
                     {
                         float timePassed = Time.time - attackStartTime;
@@ -98,11 +105,24 @@ public class Character : MonoBehaviour
 
                         movementVelocity = Vector3.Lerp(transform.forward * attackSlideSpeed, Vector3.zero, lerpTime);
                     }
-                }
-                else
-                {
-                    //Quaternion newRot = Quaternion.LookRotation(GameObject.FindWithTag("Player").transform.position - transform.position);
-                    //transform.rotation = newRot;
+
+                    if(playerInput.mouseBtnDown && characterController.isGrounded)
+                    {
+                        // Grab animation name
+                        string currentAnimClipName = animator.GetCurrentAnimatorClipInfo(0)[0].clip.name;
+                        // Grab current animation duration
+                        // NormalizedTime value will be 0 at the start of the animation and 1 at the end
+                        attackAnimDuration = animator.GetCurrentAnimatorStateInfo(0).normalizedTime;
+
+                        if(currentAnimClipName != "LittleAdventurerAndie_ATTACK_03" && attackAnimDuration > 0.5f && attackAnimDuration < 0.7f)
+                        {
+                            playerInput.mouseBtnDown = false;
+                            // Will play the attack animation, this is how the designing done in the state machine
+                            SwitchStateTo(CharacterState.ATTACKING);
+
+                            CalculatePlayerMovment();
+                        }
+                    }
                 }
                 break;
 
@@ -214,6 +234,9 @@ public class Character : MonoBehaviour
 
                 if (damageCaster != null)
                     DisableDamageCaster();
+
+                if (isPlayer)
+                    GetComponent<PlayerFXManager>().StopBlade();
                 break;
             
             case CharacterState.DEAD:
@@ -247,8 +270,7 @@ public class Character : MonoBehaviour
                 break;
 
             case CharacterState.DEAD:
-                if(isPlayer)
-                    characterController.enabled = false;
+                characterController.enabled = false;
 
                 ChangeAnimState<object>("Dead", null);
                 StartCoroutine(MaterialDissolve());
@@ -373,5 +395,31 @@ public class Character : MonoBehaviour
         {
             Instantiate(itemToDrop, transform.position, Quaternion.identity);
         }
+    }
+
+    public void PickUpItem(PickUp item)
+    {
+        switch(item.type)
+        {
+            case PickUp.PickUpType.HEAL:
+                AddHealth(item.value);
+                break;
+
+            case PickUp.PickUpType.COIN:
+                AddCoin(item.value);
+                break;
+        }
+    }
+
+    public void AddHealth(int health)
+    {
+        this.health.AddHealth(health);
+        // Play heal orb vfx
+        GetComponent<PlayerFXManager>().Heal();
+    }
+
+    public void AddCoin(int coin)
+    {
+        this.coin += coin;
     }
 }
