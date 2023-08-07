@@ -10,21 +10,23 @@ public class EnemyVFXManager : MonoBehaviour
 
     public void BurstFootStep()
     {
-        footStepFX.SendEvent("OnPlay");
+        if (footStepFX != null)
+            footStepFX.SendEvent("OnPlay");
     }
 
     public void PlaySmash() 
     {
-        Debug.Log("Snmash");
-        smashFX.Play(); 
+        if (smashFX != null)
+            smashFX.Play(); 
     }
 
     public void BeingHit(Vector3 attackerPos)
     {
+        //Debug.Log("Being Hit attackert Pos : " + attackerPos);
         Vector3 forceForward = transform.position - attackerPos;
         forceForward.Normalize();
         forceForward.y = 0;
-
+        //Debug.Log(forceForward);
         beingHitFX.transform.rotation = Quaternion.LookRotation(forceForward);
         beingHitFX.Play();
 
@@ -38,6 +40,9 @@ public class EnemyVFXManager : MonoBehaviour
 
         VisualEffect newSplashVFX = Instantiate(beingHitSplashFX, splashPos, Quaternion.identity) as VisualEffect;
         newSplashVFX.Play();
-        Destroy(newSplashVFX, 5f);
+
+        // Destroy the gameobject not the Visual Effect component
+        // Otherwise a empty game object will be laying in the hierarchy
+        Destroy(newSplashVFX.gameObject, 5f);
     }
 }

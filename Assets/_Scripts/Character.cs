@@ -47,10 +47,13 @@ public class Character : MonoBehaviour
     public bool IsInvincible;
     public float invincibleDuration = 2f;
 
+    // Sliding
+    public float slideSpeed = 9f;
+
     // Enums
     public enum CharacterState
     {
-        NORMAL, ATTACKING, DEAD, BEINGHIT
+        NORMAL, ATTACKING, DEAD, BEINGHIT, SLIDE
     }
     #endregion
 
@@ -131,6 +134,10 @@ public class Character : MonoBehaviour
 
             case CharacterState.BEINGHIT:
                 break;
+
+            case CharacterState.SLIDE:
+                movementVelocity = transform.forward * slideSpeed * Time.deltaTime;
+                break;
         }
 
         if (isPlayer)
@@ -147,6 +154,11 @@ public class Character : MonoBehaviour
         if (playerInput.mouseBtnDown && characterController.isGrounded)
         {
             SwitchStateTo(CharacterState.ATTACKING);
+            return;
+        }
+        else if (playerInput.spaceKeyDown && characterController.isGrounded)
+        {
+            SwitchStateTo(CharacterState.SLIDE);
             return;
         }
 
@@ -221,7 +233,7 @@ public class Character : MonoBehaviour
         if (isPlayer)
         {
             // Clear cache
-            playerInput.mouseBtnDown = false;
+            playerInput.ClearCache();
         }
 
         // Exiting State
@@ -241,8 +253,11 @@ public class Character : MonoBehaviour
             
             case CharacterState.DEAD:
                 return;
-            
+
             case CharacterState.BEINGHIT:
+                break;
+
+            case CharacterState.SLIDE:
                 break;
         }
 
@@ -285,13 +300,17 @@ public class Character : MonoBehaviour
                 }
                 break;
 
+            case CharacterState.SLIDE:
+                ChangeAnimState<object>("Slide");
+                break;
+
         }
 
         currentState = newState;
     }
 
     #region Animation
-    private void ChangeAnimState<T>(string stateName, T value = default) where T : class
+    private void ChangeAnimState<T>(string stateName, T value = null) where T : class
     {
         switch (value)
         {
@@ -422,4 +441,18 @@ public class Character : MonoBehaviour
     {
         this.coin += coin;
     }
+
+    public void SlideAnimationEnds()
+    {
+        SwitchStateTo(CharacterState.NORMAL);
+    }
+
+    public void RotateToTarget()
+    {
+        if(currentState != CharacterState.DEAD)
+        {
+            transform.LookAt(targetPos, Vector3.up);
+        }
+    }
+
 }
