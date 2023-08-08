@@ -99,14 +99,14 @@ ModelImporter:
         floatParameter: 0
         intParameter: 0
         messageOptions: 0
-      - time: 0.50397927
+      - time: 0.47094622
         functionName: EnableDamageCaster
         data: 
         objectReferenceParameter: {instanceID: 0}
         floatParameter: 0
         intParameter: 0
         messageOptions: 0
-      - time: 0.818792
+      - time: 0.6175908
         functionName: DisableDamageCaster
         data: 
         objectReferenceParameter: {instanceID: 0}

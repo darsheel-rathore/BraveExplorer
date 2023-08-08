@@ -70,29 +70,29 @@ public class DamageCaster : MonoBehaviour
         Debug.Log("Disable Damage caster");
     }
 
-    public void OnDrawGizmos()
-    {
-        if (damageCasterCollider == null)
-            damageCasterCollider = GetComponent<Collider>();
+    //public void OnDrawGizmos()
+    //{
+    //    if (damageCasterCollider == null)
+    //        damageCasterCollider = GetComponent<Collider>();
 
-        // Calculate the original position for the boxcast (with adding offset value)
-        Vector3 originalPos = transform.position + (-damageCasterCollider.bounds.extents.z * transform.forward);
+    //    // Calculate the original position for the boxcast (with adding offset value)
+    //    Vector3 originalPos = transform.position + (-damageCasterCollider.bounds.extents.z * transform.forward);
 
-        // Perform a boxcast
-        bool isHit = Physics.BoxCast(
-                                    originalPos,
-                                    damageCasterCollider.bounds.extents / 2,
-                                    transform.forward,
-                                    out RaycastHit hit,
-                                    transform.rotation,
-                                    damageCasterCollider.bounds.extents.z,
-                                    1 << 6);
+    //    // Perform a boxcast
+    //    bool isHit = Physics.BoxCast(
+    //                                originalPos,
+    //                                damageCasterCollider.bounds.extents / 2,
+    //                                transform.forward,
+    //                                out RaycastHit hit,
+    //                                transform.rotation,
+    //                                damageCasterCollider.bounds.extents.z,
+    //                                1 << 6);
 
-        if (isHit)
-        {
-            Gizmos.color = Color.red;
-            Gizmos.DrawWireSphere(hit.point, 0.3f);
-        }
+    //    if (isHit)
+    //    {
+    //        Gizmos.color = Color.red;
+    //        Gizmos.DrawWireSphere(hit.point, 0.3f);
+    //    }
 
-    }
+    //}
 }

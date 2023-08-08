@@ -20,7 +20,7 @@ public class Character : MonoBehaviour
     public bool isPlayer = true;
     private UnityEngine.AI.NavMeshAgent navMeshAgent;
     private Transform targetPos;
-    private CharacterState currentState;
+    public CharacterState currentState;
 
     // Coin
     public int coin;
@@ -50,10 +50,14 @@ public class Character : MonoBehaviour
     // Sliding
     public float slideSpeed = 9f;
 
+    // Spawn
+    public float spawnDuration = 2f;
+    private float currentSpawnTime;
+
     // Enums
     public enum CharacterState
     {
-        NORMAL, ATTACKING, DEAD, BEINGHIT, SLIDE
+        NORMAL, ATTACKING, DEAD, BEINGHIT, SLIDE, SPAWN
     }
     #endregion
 
@@ -75,6 +79,8 @@ public class Character : MonoBehaviour
             navMeshAgent = GetComponent<UnityEngine.AI.NavMeshAgent>();
             navMeshAgent.speed = moveSpeed;
             targetPos = GameObject.FindWithTag("Player").transform;
+            
+            SwitchStateTo(CharacterState.SPAWN);
         }
         else
         {
@@ -137,6 +143,14 @@ public class Character : MonoBehaviour
 
             case CharacterState.SLIDE:
                 movementVelocity = transform.forward * slideSpeed * Time.deltaTime;
+                break;
+
+            case CharacterState.SPAWN:
+                currentSpawnTime -= Time.deltaTime;
+                if(currentSpawnTime < 0)
+                {
+                    SwitchStateTo(CharacterState.NORMAL);
+                }
                 break;
         }
 
@@ -259,6 +273,10 @@ public class Character : MonoBehaviour
 
             case CharacterState.SLIDE:
                 break;
+
+            case CharacterState.SPAWN:
+                IsInvincible = false;
+                break;
         }
 
         // Entering State
@@ -302,6 +320,12 @@ public class Character : MonoBehaviour
 
             case CharacterState.SLIDE:
                 ChangeAnimState<object>("Slide");
+                break;
+
+            case CharacterState.SPAWN:
+                IsInvincible = true;
+                currentSpawnTime = spawnDuration;
+                StartCoroutine(MaterialAppear());
                 break;
 
         }
@@ -455,4 +479,28 @@ public class Character : MonoBehaviour
         }
     }
 
+    IEnumerator MaterialAppear()
+    {
+        float dissolveTimeDuration = spawnDuration;
+        float currentDissolveTime = 0;
+        float dissolveHeight_start = -10f;
+        float dissolveHeight_target = 20f;
+        float dissolveHeight;
+
+        materialPropertyBlock.SetFloat("_enableDissolve", 1f);
+        skinnedMeshRenderer.SetPropertyBlock(materialPropertyBlock);
+
+        while(currentDissolveTime < dissolveTimeDuration)
+        {
+            currentDissolveTime += Time.deltaTime;
+            dissolveHeight = Mathf.Lerp(dissolveHeight_start, dissolveHeight_target, currentDissolveTime / dissolveTimeDuration);
+
+            materialPropertyBlock.SetFloat("_dissolve_height", dissolveHeight);
+            skinnedMeshRenderer.SetPropertyBlock(materialPropertyBlock);
+            yield return null;
+        }
+
+        materialPropertyBlock.SetFloat("_enableDissolve", 0f);
+        skinnedMeshRenderer.SetPropertyBlock(materialPropertyBlock);
+    }
 }

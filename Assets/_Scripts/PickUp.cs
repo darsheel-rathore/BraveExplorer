@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class PickUp : MonoBehaviour
 {
+    public ParticleSystem collectiveVFX;
+
     public enum PickUpType
     {
         HEAL, COIN
@@ -17,6 +19,12 @@ public class PickUp : MonoBehaviour
         if(other.tag == "Player")
         {
             other.gameObject.GetComponent<Character>().PickUpItem(this);
+
+            if(collectiveVFX != null)
+            {
+                Instantiate(collectiveVFX, transform.position, Quaternion.identity);
+            }
+
             Destroy(gameObject);
         }
     }
