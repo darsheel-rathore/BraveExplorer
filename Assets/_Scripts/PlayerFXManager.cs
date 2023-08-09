@@ -5,7 +5,7 @@ public class PlayerFXManager : MonoBehaviour
 {
     [SerializeField] public VisualEffect footStepFX;
     [SerializeField] public VisualEffect fallFX;
-    
+
     [SerializeField] public ParticleSystem blade01;
     [SerializeField] public ParticleSystem blade02;
     [SerializeField] public ParticleSystem blade03;

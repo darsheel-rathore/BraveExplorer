@@ -14,7 +14,7 @@ public class PlayerInput : MonoBehaviour
         if (!mouseBtnDown && Time.timeScale != 0.0f)
             mouseBtnDown = Input.GetMouseButtonDown(0);
 
-        if(!spaceKeyDown && Time.timeScale != 0)
+        if (!spaceKeyDown && Time.timeScale != 0)
             spaceKeyDown = Input.GetKeyDown(KeyCode.Space);
 
         horizontalInput = Input.GetAxisRaw("Horizontal");

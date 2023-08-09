@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -10,7 +9,7 @@ public class DropWeapons : MonoBehaviour
     {
         foreach (var weapon in weapons)
         {
-            weapon.AddComponent<Rigidbody>();   
+            weapon.AddComponent<Rigidbody>();
             weapon.AddComponent<BoxCollider>();
             weapon.transform.parent = null;
         }

@@ -14,10 +14,10 @@ public class EnemyVFXManager : MonoBehaviour
             footStepFX.SendEvent("OnPlay");
     }
 
-    public void PlaySmash() 
+    public void PlaySmash()
     {
         if (smashFX != null)
-            smashFX.Play(); 
+            smashFX.Play();
     }
 
     public void BeingHit(Vector3 attackerPos)

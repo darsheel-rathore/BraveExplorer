@@ -1,27 +1,27 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
-    private Character playerCharacter;
+    public Character playerCharacter;
+    public GameUIManager gameUIManager;
     private bool gameIsOver;
 
     private void Awake()
     {
         playerCharacter = GameObject.FindWithTag("Player").GetComponent<Character>();
+        gameUIManager = FindObjectOfType<GameUIManager>();
     }
 
     private void GameOver()
     {
-        Debug.Log("Game Over");
+        gameUIManager.ShowGameOver_UI();
     }
 
     public void GameIsFinished()
     {
-        Debug.Log("Game is finished.");
+        gameUIManager.ShowGameIsFinishedUI();
     }
-
 
     // Update is called once per frame
     void Update()
@@ -29,10 +29,26 @@ public class GameManager : MonoBehaviour
         if (gameIsOver)
             return;
 
-        if(playerCharacter.currentState == Character.CharacterState.DEAD)
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            gameUIManager.TogglePauseUI();
+        }
+
+        if (playerCharacter.currentState == Character.CharacterState.DEAD)
         {
             gameIsOver = true;
             GameOver();
         }
+    }
+
+    public void ReturnToMainMenu()
+    {
+        Time.timeScale = 1.0f;
+        SceneManager.LoadScene("MainMenu");
+    }
+
+    public void Restart()
+    {
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 }

@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -19,16 +18,16 @@ public class DamageCaster : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        if(other.tag == TargetTag && !damagedTargetList.Contains(other))
+        if (other.tag == TargetTag && !damagedTargetList.Contains(other))
         {
             Character target = other.GetComponent<Character>();
-            if(target != null)
+            if (target != null)
             {
                 target.ApplyDamage(damage, transform.parent.position);
 
                 PlayerFXManager playerFXManager = transform.parent.GetComponent<PlayerFXManager>();
 
-                if(playerFXManager != null )
+                if (playerFXManager != null)
                 {
                     // Calculate the original position for the boxcast (with adding offset value)
                     Vector3 originalPos = transform.position + (-damageCasterCollider.bounds.extents.z * transform.forward);
@@ -42,8 +41,8 @@ public class DamageCaster : MonoBehaviour
                                                 transform.rotation,
                                                 damageCasterCollider.bounds.extents.z,
                                                 1 << 6);
-                    
-                    if(isHit)
+
+                    if (isHit)
                     {
                         playerFXManager.Slash(hit.point + new Vector3(0, 0.5f, 0));
                     }

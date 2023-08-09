@@ -1,5 +1,4 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class Gate : MonoBehaviour
@@ -25,7 +24,7 @@ public class Gate : MonoBehaviour
         Vector3 startPos = gateVisual.transform.position;
         Vector3 endPos = gateVisual.transform.position + Vector3.up * openTargetY;
 
-        while(currentOpenDuration < openDuration)
+        while (currentOpenDuration < openDuration)
         {
             currentOpenDuration += Time.deltaTime;
             gateVisual.transform.position = Vector3.Lerp(startPos, endPos, currentOpenDuration / openDuration);

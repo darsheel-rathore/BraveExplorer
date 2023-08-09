@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class Health : MonoBehaviour
@@ -7,6 +5,13 @@ public class Health : MonoBehaviour
     public int maxHealth;
     public int currentHealth;
     public Character character;
+    public float currentHealthPercentage
+    {
+        get
+        {
+            return (float)currentHealth / (float)maxHealth;
+        }
+    }
 
     private void Awake()
     {
@@ -16,7 +21,7 @@ public class Health : MonoBehaviour
 
     public void ApplyDamage(int damage)
     {
-        if(currentHealth >= damage)
+        if (currentHealth >= damage)
         {
             currentHealth -= damage;
             //Debug.Log("Current Health:: " + currentHealth);
@@ -24,7 +29,7 @@ public class Health : MonoBehaviour
         }
         else
         {
-            currentHealth = 0;             
+            currentHealth = 0;
         }
 
         CheckHealth();
@@ -32,7 +37,7 @@ public class Health : MonoBehaviour
 
     private void CheckHealth()
     {
-        if(currentHealth <= 0)
+        if (currentHealth <= 0)
         {
             character.SwitchStateTo(Character.CharacterState.DEAD);
         }
@@ -42,7 +47,7 @@ public class Health : MonoBehaviour
     {
         currentHealth += health;
 
-        if(currentHealth > maxHealth)   
+        if (currentHealth > maxHealth)
             currentHealth = maxHealth;
     }
 }

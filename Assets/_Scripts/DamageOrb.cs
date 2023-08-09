@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class DamageOrb : MonoBehaviour
@@ -11,7 +9,7 @@ public class DamageOrb : MonoBehaviour
 
     private void Awake()
     {
-        rb = GetComponent<Rigidbody> ();
+        rb = GetComponent<Rigidbody>();
     }
 
     private void FixedUpdate()
@@ -21,7 +19,7 @@ public class DamageOrb : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        if(other.gameObject.tag == "Player")
+        if (other.gameObject.tag == "Player")
         {
             // Reduce the health
             other.gameObject.GetComponent<Character>().ApplyDamage(damage, transform.position);
@@ -30,7 +28,7 @@ public class DamageOrb : MonoBehaviour
         var VFX = Instantiate(hitVFX, transform.position, Quaternion.identity);
 
         // Delete the game object
-        Destroy (VFX, 2f);
+        Destroy(VFX, 2f);
 
         // Destroy this game object
         Destroy(gameObject);

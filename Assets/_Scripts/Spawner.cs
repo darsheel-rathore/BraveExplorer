@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
@@ -15,7 +14,7 @@ public class Spawner : MonoBehaviour
     {
         SpawnPoints[] spawnPointArray = transform.parent.GetComponentsInChildren<SpawnPoints>();
         spawnPointList = new List<SpawnPoints>(spawnPointArray);
-        spawnedCharacterList = new List<Character>();  
+        spawnedCharacterList = new List<Character>();
     }
 
     private void Update()
@@ -33,7 +32,7 @@ public class Spawner : MonoBehaviour
             }
         }
 
-        if(allSpawnedEnemyAreDead)
+        if (allSpawnedEnemyAreDead)
         {
             if (OnAllSpawnedCharacterEliminated != null)
                 OnAllSpawnedCharacterEliminated.Invoke();
@@ -67,7 +66,7 @@ public class Spawner : MonoBehaviour
         {
             SpawnCharacters();
         }
-        
+
     }
 
     private void OnDrawGizmos()

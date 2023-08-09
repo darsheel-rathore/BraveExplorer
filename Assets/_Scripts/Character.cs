@@ -33,6 +33,9 @@ public class Character : MonoBehaviour
     public float attackSlideDuration = 0.4f;
     public float attackSlideSpeed = 0.06f;
 
+    // Impact On Player
+    private Vector3 impactOnCharacter;
+
     // Damage Caster
     private DamageCaster damageCaster;
 
@@ -65,7 +68,7 @@ public class Character : MonoBehaviour
     {
         // Initializing Fields
         animator = GetComponent<Animator>();
-        health = GetComponent<Health>();    
+        health = GetComponent<Health>();
 
         skinnedMeshRenderer = GetComponentInChildren<SkinnedMeshRenderer>();
         materialPropertyBlock = new MaterialPropertyBlock();
@@ -79,7 +82,7 @@ public class Character : MonoBehaviour
             navMeshAgent = GetComponent<UnityEngine.AI.NavMeshAgent>();
             navMeshAgent.speed = moveSpeed;
             targetPos = GameObject.FindWithTag("Player").transform;
-            
+
             SwitchStateTo(CharacterState.SPAWN);
         }
         else
@@ -115,7 +118,7 @@ public class Character : MonoBehaviour
                         movementVelocity = Vector3.Lerp(transform.forward * attackSlideSpeed, Vector3.zero, lerpTime);
                     }
 
-                    if(playerInput.mouseBtnDown && characterController.isGrounded)
+                    if (playerInput.mouseBtnDown && characterController.isGrounded)
                     {
                         // Grab animation name
                         string currentAnimClipName = animator.GetCurrentAnimatorClipInfo(0)[0].clip.name;
@@ -123,13 +126,13 @@ public class Character : MonoBehaviour
                         // NormalizedTime value will be 0 at the start of the animation and 1 at the end
                         attackAnimDuration = animator.GetCurrentAnimatorStateInfo(0).normalizedTime;
 
-                        if(currentAnimClipName != "LittleAdventurerAndie_ATTACK_03" && attackAnimDuration > 0.5f && attackAnimDuration < 0.7f)
+                        if (currentAnimClipName != "LittleAdventurerAndie_ATTACK_03" && attackAnimDuration > 0.5f && attackAnimDuration < 0.7f)
                         {
                             playerInput.mouseBtnDown = false;
                             // Will play the attack animation, this is how the designing done in the state machine
                             SwitchStateTo(CharacterState.ATTACKING);
 
-                            CalculatePlayerMovment();
+                            //CalculatePlayerMovment();
                         }
                     }
                 }
@@ -147,18 +150,33 @@ public class Character : MonoBehaviour
 
             case CharacterState.SPAWN:
                 currentSpawnTime -= Time.deltaTime;
-                if(currentSpawnTime < 0)
+                if (currentSpawnTime < 0)
                 {
                     SwitchStateTo(CharacterState.NORMAL);
                 }
                 break;
         }
+        
+        if (impactOnCharacter.magnitude > 0.2f)
+        {
+            movementVelocity = impactOnCharacter * Time.deltaTime;
+        }
+        impactOnCharacter = Vector3.Lerp(impactOnCharacter, Vector3.zero, Time.deltaTime * 5);
+
 
         if (isPlayer)
         {
             CheckPlayerFall();                              // Change the animation state to falling
             characterController.Move(movementVelocity);     // Finally moves the player in the desired direction
             movementVelocity = Vector3.zero;
+        }
+        else
+        {
+            if(currentState != CharacterState.NORMAL)
+            {
+                characterController.Move(movementVelocity);
+                movementVelocity = Vector3.zero;
+            }
         }
     }
 
@@ -264,7 +282,7 @@ public class Character : MonoBehaviour
                 if (isPlayer)
                     GetComponent<PlayerFXManager>().StopBlade();
                 break;
-            
+
             case CharacterState.DEAD:
                 return;
 
@@ -299,6 +317,7 @@ public class Character : MonoBehaviour
                 if (isPlayer)
                 {
                     attackStartTime = Time.time;
+                    RotateToCursor();
                 }
                 break;
 
@@ -307,6 +326,12 @@ public class Character : MonoBehaviour
 
                 ChangeAnimState<object>("Dead", null);
                 StartCoroutine(MaterialDissolve());
+
+                if(!isPlayer)
+                {
+                    SkinnedMeshRenderer mesh = GetComponentInChildren<SkinnedMeshRenderer>();
+                    mesh.gameObject.layer = 0;
+                }
                 break;
 
             case CharacterState.BEINGHIT:
@@ -370,15 +395,29 @@ public class Character : MonoBehaviour
             health.ApplyDamage(damage);
         }
 
-        if(!isPlayer)
+        if (!isPlayer)
         {
             GetComponent<EnemyVFXManager>().BeingHit(attackPos);
         }
 
         if (isPlayer)
+        {
             SwitchStateTo(CharacterState.BEINGHIT);
-
+            AddImpact(attackPos, 10f);
+        }
+        else
+        {
+            AddImpact(attackPos, 2.5f);
+        }
         StartCoroutine(MaterialBlink());
+    }
+
+    private void AddImpact(Vector3 attackerPos, float force)
+    {
+        Vector3 impactDir = transform.position - attackerPos;
+        impactDir.Normalize();
+        impactDir.y = 0;
+        impactOnCharacter = impactDir * force;
     }
 
     public void EnableDamageCaster() => damageCaster.EnableDamageCaster();
@@ -412,7 +451,7 @@ public class Character : MonoBehaviour
         materialPropertyBlock.SetFloat("_enableDissolve", 1f);
         skinnedMeshRenderer.SetPropertyBlock(materialPropertyBlock);
 
-        while(currentDissolveTime < dissolveTimeDuration)
+        while (currentDissolveTime < dissolveTimeDuration)
         {
             currentDissolveTime += Time.deltaTime;
             dissolveHeight = Mathf.Lerp(dissolveHeight_start, dissolveHeight_target, currentDissolveTime / dissolveTimeDuration);
@@ -442,7 +481,7 @@ public class Character : MonoBehaviour
 
     public void PickUpItem(PickUp item)
     {
-        switch(item.type)
+        switch (item.type)
         {
             case PickUp.PickUpType.HEAL:
                 AddHealth(item.value);
@@ -473,7 +512,7 @@ public class Character : MonoBehaviour
 
     public void RotateToTarget()
     {
-        if(currentState != CharacterState.DEAD)
+        if (currentState != CharacterState.DEAD)
         {
             transform.LookAt(targetPos, Vector3.up);
         }
@@ -490,7 +529,7 @@ public class Character : MonoBehaviour
         materialPropertyBlock.SetFloat("_enableDissolve", 1f);
         skinnedMeshRenderer.SetPropertyBlock(materialPropertyBlock);
 
-        while(currentDissolveTime < dissolveTimeDuration)
+        while (currentDissolveTime < dissolveTimeDuration)
         {
             currentDissolveTime += Time.deltaTime;
             dissolveHeight = Mathf.Lerp(dissolveHeight_start, dissolveHeight_target, currentDissolveTime / dissolveTimeDuration);
@@ -502,5 +541,18 @@ public class Character : MonoBehaviour
 
         materialPropertyBlock.SetFloat("_enableDissolve", 0f);
         skinnedMeshRenderer.SetPropertyBlock(materialPropertyBlock);
+    }
+
+    private void RotateToCursor()
+    {
+        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        bool ishit = Physics.Raycast(ray, out RaycastHit hit, 1000, 1 << LayerMask.NameToLayer("CursorTest"));
+
+        if(ishit)
+        {
+            Vector3 cursorPos = hit.point;
+
+            transform.rotation = Quaternion.LookRotation(cursorPos - transform.position, Vector3.up);
+        }
     }
 }

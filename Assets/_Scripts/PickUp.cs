@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class PickUp : MonoBehaviour
@@ -16,11 +14,11 @@ public class PickUp : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        if(other.tag == "Player")
+        if (other.tag == "Player")
         {
             other.gameObject.GetComponent<Character>().PickUpItem(this);
 
-            if(collectiveVFX != null)
+            if (collectiveVFX != null)
             {
                 Instantiate(collectiveVFX, transform.position, Quaternion.identity);
             }
